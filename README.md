@@ -6,13 +6,11 @@ BiLSTM + Self-Attention baseline, achieving **80.4% test accuracy** and **0.919 
 
 ---
 
-## Links
+**Live App: https://sentiment-newsanalysis.streamlit.app/**
 
-| Resource | URL |
-|---|---|
-| **Live App** | **https://sentiment-newsanalysis.streamlit.app/** |
-| GitHub | https://github.com/Karthik0809/Sentiment-analysis-using-LSTM |
-| API Docs | http://localhost:8000/docs (run locally) |
+1. Type or paste any news headline
+2. Click **Analyse Sentiment** — get Negative / Neutral / Positive instantly
+3. Switch to **Live News Feed** to fetch and analyse real headlines from BBC, CNN, NPR and more
 
 ---
 
