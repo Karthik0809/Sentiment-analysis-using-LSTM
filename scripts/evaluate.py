@@ -80,6 +80,7 @@ def main():
     )
     ckpt = torch.load(args.checkpoint, map_location=device)
     model.load_state_dict(ckpt["model_state_dict"])
+    model = model.to(device)
     logger.info(f"Loaded checkpoint: {args.checkpoint}")
 
     # Evaluate

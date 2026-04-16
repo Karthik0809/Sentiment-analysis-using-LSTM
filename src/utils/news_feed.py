@@ -123,6 +123,7 @@ def analyze_headlines(
     model,
     preprocessor,
     device,
+    tokenizer=None,
 ) -> List[NewsHeadline]:
     """
     Run batch sentiment inference on a list of NewsHeadline objects.
@@ -131,9 +132,11 @@ def analyze_headlines(
     Parameters
     ----------
     headlines    : list from fetch_headlines / fetch_multi_source
-    model        : trained PyTorch model (returns logits, attn)
-    preprocessor : fitted TextPreprocessor
+    model        : trained PyTorch model (returns logits, attn_or_None)
+    preprocessor : fitted TextPreprocessor (used when tokenizer is None)
     device       : torch.device
+    tokenizer    : HuggingFace tokenizer — pass for DistilBERT models,
+                   omit (or pass None) for BiLSTM models
     """
     import torch
 
@@ -143,11 +146,24 @@ def analyze_headlines(
         return headlines
 
     titles = [h.title for h in headlines]
-    sequences = [preprocessor.encode(t) for t in titles]
-    tensor = torch.tensor(sequences, dtype=torch.long).to(device)
 
     with torch.no_grad():
-        logits, _ = model(tensor)
+        if tokenizer is not None:
+            # DistilBERT path
+            enc = tokenizer(
+                titles,
+                truncation=True,
+                padding="max_length",
+                max_length=64,
+                return_tensors="pt",
+            )
+            logits, _ = model(enc["input_ids"].to(device), enc["attention_mask"].to(device))
+        else:
+            # BiLSTM path
+            sequences = [preprocessor.encode(t) for t in titles]
+            tensor = torch.tensor(sequences, dtype=torch.long).to(device)
+            logits, _ = model(tensor)
+
         probs = torch.softmax(logits, dim=1).cpu().numpy()
 
     for i, headline in enumerate(headlines):
