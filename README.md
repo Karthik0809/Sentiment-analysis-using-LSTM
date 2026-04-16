@@ -339,10 +339,13 @@ Start: `uvicorn api.main:app --port 8000`  ·  Docs: `http://localhost:8000/docs
 
 ### Option 1 — Streamlit Community Cloud (free public URL)
 
-1. Push this repo to GitHub (include `checkpoints/`)
+1. Push this repo to GitHub — `preprocessor.pkl` is already committed
 2. Go to [share.streamlit.io](https://share.streamlit.io) → **New app**
 3. Select `app.py` as the entry point
 4. Your live URL: `https://<your-app>.streamlit.app`
+
+> `app.py` automatically downloads `best_model.pt` (~112 MB) from the
+> GitHub Release asset on first boot — no manual file upload needed.
 
 ### Option 2 — Docker (local / cloud server)
 
