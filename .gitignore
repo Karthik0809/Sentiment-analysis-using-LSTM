@@ -1,0 +1,61 @@
+# Python
+__pycache__/
+*.py[cod]
+*.pyo
+*.pyd
+*.so
+*.egg
+*.egg-info/
+dist/
+build/
+.eggs/
+.mypy_cache/
+.pytest_cache/
+.ruff_cache/
+
+# Environments
+.env
+.venv
+venv/
+env/
+ENV/
+
+# Jupyter
+.ipynb_checkpoints/
+*.ipynb
+
+# Data (large files — use DVC or download separately)
+data/
+*.json
+*.csv
+*.parquet
+
+# Model checkpoints (large binaries)
+checkpoints/*.pt
+checkpoints/*.pth
+checkpoints/*.pkl
+
+# Outputs (generated files)
+outputs/
+mlruns/
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# OS
+.DS_Store
+Thumbs.db
+
+# LaTeX build artefacts
+research/*.aux
+research/*.log
+research/*.out
+research/*.bbl
+research/*.blg
+research/*.fls
+research/*.fdb_latexmk
+research/*.synctex.gz
+research/*.pdf

@@ -1,0 +1,51 @@
+version: "3.9"
+
+# ── Shared config ─────────────────────────────────────────────────────
+x-common: &common
+  restart: unless-stopped
+  environment:
+    PYTHONPATH: /app
+    PYTHONUNBUFFERED: "1"
+  volumes:
+    - ./checkpoints:/app/checkpoints:ro
+    - ./configs:/app/configs:ro
+
+# ── Services ──────────────────────────────────────────────────────────
+services:
+
+  # ── REST API ──────────────────────────────────────────────────────
+  api:
+    <<: *common
+    build:
+      context: ..
+      dockerfile: deployment/Dockerfile
+    container_name: sentiment_api
+    ports:
+      - "8000:8000"
+    healthcheck:
+      test: ["CMD", "python", "-c",
+             "import urllib.request; urllib.request.urlopen('http://localhost:8000/health')"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 20s
+
+  # ── Streamlit UI ──────────────────────────────────────────────────
+  ui:
+    <<: *common
+    build:
+      context: ..
+      dockerfile: deployment/Dockerfile.streamlit
+    container_name: sentiment_ui
+    ports:
+      - "8501:8501"
+    depends_on:
+      api:
+        condition: service_healthy
+    environment:
+      PYTHONPATH: /app
+      API_URL: http://api:8000
+
+# ── Volumes ───────────────────────────────────────────────────────────
+volumes:
+  checkpoints:
