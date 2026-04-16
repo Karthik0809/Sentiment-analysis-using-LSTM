@@ -39,6 +39,26 @@ SAMPLE_HEADLINES = [
 
 
 # ── Model loading (cached) ────────────────────────────────────────────
+GDRIVE_FILE_ID = "1Gtcx25zherCBc7iIuoyYDgd5-qJDaIpG"
+
+def _get_model_path() -> str:
+    """Return path to best_model.pt, downloading from Google Drive if needed."""
+    local  = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))),
+                          "checkpoints", "best_model.pt")
+    tmp    = "/tmp/best_model.pt"
+
+    if os.path.exists(local):
+        return local
+    if os.path.exists(tmp):
+        return tmp
+
+    # Download to /tmp/ (writable on Streamlit Cloud)
+    import gdown
+    st.info("Downloading model weights (~112 MB) — this happens once …")
+    gdown.download(id=GDRIVE_FILE_ID, output=tmp, quiet=False)
+    return tmp
+
+
 @st.cache_resource(show_spinner="Loading model...")
 def load_model():
     import pickle
@@ -59,8 +79,7 @@ def load_model():
         n_layers=config["model"]["n_layers"],
         dropout=0.0,
     )
-    model_path = os.environ.get("SENTIMENT_MODEL_PATH", "checkpoints/best_model.pt")
-    ckpt = torch.load(model_path, map_location=device)
+    ckpt = torch.load(_get_model_path(), map_location=device)
     model.load_state_dict(ckpt["model_state_dict"])
     model.eval()
     return model.to(device), preprocessor, device
