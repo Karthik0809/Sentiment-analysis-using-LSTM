@@ -156,6 +156,18 @@ def predict(text: str, model, tok_or_prep, device, model_type: str):
     return pred, probs, tokens, attn
 
 
+# ── Load model first (model_type needed by sidebar) ───────────────────
+model_available = False
+model_type = "bilstm"
+try:
+    model, tok_or_prep, device, model_type = load_model()
+    model_available = True
+except Exception as exc:
+    st.warning(
+        f"Model not loaded ({exc}).  \n"
+        "Run `python scripts/train_bert.py` to train a checkpoint."
+    )
+
 # ── Sidebar ───────────────────────────────────────────────────────────
 with st.sidebar:
     st.markdown("## 📰 News Sentiment")
@@ -190,18 +202,6 @@ st.caption(
     f"Powered by {_model_label} trained on "
     "200 K+ news articles across 42 categories."
 )
-
-# Load model (non-blocking warning if not available)
-model_available = False
-model_type = "bilstm"
-try:
-    model, tok_or_prep, device, model_type = load_model()
-    model_available = True
-except Exception as exc:
-    st.warning(
-        f"Model not loaded ({exc}).  \n"
-        "Run `python scripts/train.py` or `python scripts/train_bert.py` to train a checkpoint."
-    )
 
 # ── Tab layout ────────────────────────────────────────────────────────
 tab_single, tab_batch, tab_live, tab_about = st.tabs(
