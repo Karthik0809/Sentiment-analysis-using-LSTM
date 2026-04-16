@@ -12,7 +12,11 @@ import os
 import sys
 import urllib.request
 
-sys.path.insert(0, os.path.dirname(__file__))
+# ── Ensure project root is the working directory and on sys.path ──────
+ROOT = os.path.dirname(os.path.abspath(__file__))
+os.chdir(ROOT)
+if ROOT not in sys.path:
+    sys.path.insert(0, ROOT)
 
 # ── Download model weights from GitHub Releases if not present ────────
 MODEL_URL  = (
