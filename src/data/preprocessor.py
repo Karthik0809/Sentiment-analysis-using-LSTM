@@ -11,8 +11,9 @@ import nltk
 from nltk.tokenize import word_tokenize
 from nltk.corpus import stopwords
 from nltk.stem import WordNetLemmatizer
+from nltk.sentiment import SentimentIntensityAnalyzer
 
-for _resource in ["punkt", "stopwords", "wordnet", "punkt_tab", "omw-1.4"]:
+for _resource in ["punkt", "stopwords", "wordnet", "punkt_tab", "omw-1.4", "vader_lexicon"]:
     nltk.download(_resource, quiet=True)
 
 logger = logging.getLogger(__name__)
@@ -23,25 +24,8 @@ class TextPreprocessor:
     Full preprocessing pipeline: clean → tokenize → lemmatize → encode.
 
     Supports three-class (Negative=0, Neutral=1, Positive=2) labeling
-    based on HuffPost news categories.
+    based on the linguistic sentiment of the headline text (VADER).
     """
-
-    POSITIVE_CATEGORIES = {
-        "WELLNESS", "ENTERTAINMENT", "FOOD & DRINK", "HEALTHY LIVING",
-        "SPORTS", "GOOD NEWS", "COMEDY", "TRAVEL", "ARTS & CULTURE",
-        "HOME & LIVING", "STYLE & BEAUTY", "PARENTING", "WEDDINGS",
-        "QUEER VOICES", "WOMEN",
-    }
-    NEGATIVE_CATEGORIES = {
-        "POLITICS", "CRIME", "DIVORCE", "WORLD NEWS", "U.S. NEWS",
-        "MEDIA", "WEIRD NEWS", "IMPACT", "BLACK VOICES",
-    }
-    NEUTRAL_CATEGORIES = {
-        "SCIENCE", "TECH", "BUSINESS", "MONEY", "EDUCATION",
-        "RELIGION", "COLLEGE", "ARTS", "ENVIRONMENT", "FIFTY",
-        "LATINO VOICES", "THE WORLDPOST", "WORLDPOST", "CULTURE & ARTS",
-        "TASTE", "PARENTS",
-    }
 
     PAD_TOKEN = "<PAD>"
     UNK_TOKEN = "<UNK>"
@@ -53,20 +37,27 @@ class TextPreprocessor:
         self.word_counts: Counter = Counter()
         self._stop_words = set(stopwords.words("english"))
         self._lemmatizer = WordNetLemmatizer()
+        self._sia = SentimentIntensityAnalyzer()
 
     # ------------------------------------------------------------------
     # Label mapping
     # ------------------------------------------------------------------
 
-    def get_label(self, category: str) -> int:
-        """Map a HuffPost category string to a sentiment integer (0/1/2)."""
-        if category in self.POSITIVE_CATEGORIES:
+    def get_label(self, headline: str) -> int:
+        """
+        Assign sentiment label from the headline text using VADER.
+
+        VADER compound score thresholds (standard):
+          >= +0.05  → Positive (2)
+          <= -0.05  → Negative (0)
+          otherwise → Neutral  (1)
+        """
+        score = self._sia.polarity_scores(headline)["compound"]
+        if score >= 0.05:
             return 2
-        if category in self.NEGATIVE_CATEGORIES:
+        if score <= -0.05:
             return 0
-        if category in self.NEUTRAL_CATEGORIES:
-            return 1
-        return -1  # unknown / excluded
+        return 1
 
     # ------------------------------------------------------------------
     # Text cleaning
