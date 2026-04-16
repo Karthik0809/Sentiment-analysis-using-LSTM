@@ -1,106 +1,34 @@
-# News Headline Sentiment Analysis — DistilBERT Fine-tuning
+# News Headline Sentiment Analysis
 
-A production-ready, end-to-end NLP system for **three-class sentiment classification**
-of news headlines. Trained on 204 K+ HuffPost articles, with a fine-tuned DistilBERT
-achieving **80.4% test accuracy** and **0.919 ROC-AUC**.
-
-[![Python 3.10+](https://img.shields.io/badge/Python-3.10%2B-blue.svg)](https://www.python.org/)
-[![PyTorch](https://img.shields.io/badge/PyTorch-2.2%2B-orange.svg)](https://pytorch.org/)
-[![FastAPI](https://img.shields.io/badge/FastAPI-0.110%2B-009688.svg)](https://fastapi.tiangolo.com/)
-[![Streamlit](https://img.shields.io/badge/Streamlit-App-FF4B4B.svg)](https://your-app.streamlit.app)
-[![MLflow](https://img.shields.io/badge/MLflow-Tracking-0194E2.svg)](https://mlflow.org/)
-[![Docker](https://img.shields.io/badge/Docker-Ready-2496ED.svg)](https://www.docker.com/)
-[![CI](https://github.com/Karthik0809/Sentiment-analysis-using-LSTM/actions/workflows/ci.yml/badge.svg)](https://github.com/Karthik0809/Sentiment-analysis-using-LSTM/actions)
-[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
+An end-to-end NLP system for **three-class sentiment classification** of news headlines.
+Fine-tunes DistilBERT on 204 K HuffPost articles and compares it against a custom
+BiLSTM + Self-Attention baseline, achieving **80.4% test accuracy** and **0.919 ROC-AUC**.
 
 ---
 
-## Live Demo & Links
+## Links
 
 | Resource | URL |
 |---|---|
-| Streamlit App | https://your-app.streamlit.app |
+| **Live App** | **https://sentiment-newsanalysis.streamlit.app/** |
 | GitHub | https://github.com/Karthik0809/Sentiment-analysis-using-LSTM |
-| API Docs | http://localhost:8000/docs (after running locally) |
+| API Docs | http://localhost:8000/docs (run locally) |
 
 ---
 
 ## Overview
 
-| Feature | Detail |
+| | |
 |---|---|
-| Task | 3-class sentiment (Negative / Neutral / Positive) |
+| Task | 3-class sentiment — Negative / Neutral / Positive |
 | Dataset | HuffPost News Category Dataset — 209 K articles, 42 categories |
-| Primary model | DistilBERT (`distilbert-base-uncased`) fine-tuned |
-| Test accuracy | **80.4%** |
-| F1 Macro | **0.753** |
-| ROC-AUC | **0.919** |
-| Comparison model | BiLSTM + Additive Self-Attention + LayerNorm (76.0%) |
-| REST API | FastAPI — single + batch inference |
-| Frontend | Streamlit — 4 tabs including Live News Feed |
-| Deployment | Docker + Streamlit Community Cloud |
-| Experiment tracking | MLflow — params, metrics, artifacts |
-| CI/CD | GitHub Actions — unit tests on Python 3.10 and 3.11 |
+| Deployed model | DistilBERT fine-tuned — **80.4% accuracy, 0.919 ROC-AUC** |
+| Comparison model | BiLSTM + Self-Attention — 76.0% accuracy |
+| Frontend | Streamlit — Single prediction, Batch analysis, Live News Feed |
+| Backend API | FastAPI — single and batch inference endpoints |
+| Deployment | Streamlit Community Cloud + Docker |
 | Live news | Real-time RSS from BBC, NPR, CNN, TechCrunch, The Guardian, Al Jazeera |
-| Pre-trained embeddings | Optional GloVe 6B (100-dim) for BiLSTM variant |
-| Temporal trend analysis | Hourly/daily sentiment score trends and source heatmaps |
-
----
-
-## Architecture
-
-### Primary: DistilBERT Fine-tuned
-
-```
-Input headline (raw text, max 64 WordPiece tokens)
-       │
-  DistilBERT encoder (6 Transformer layers, 768 hidden dims)
-  distilbert-base-uncased — 66 M parameters
-       │
-  [CLS] token representation  ─► 768-dim
-       │
-  Pre-classifier FC(768 → 768) → GELU
-       │
-  Dropout(0.2)
-       │
-  Classifier FC(768 → 3) → Logits
-       │
-  {Negative, Neutral, Positive}
-```
-
-**Fine-tuning details**
-
-| Hyperparameter | Value |
-|---|---|
-| Base model | distilbert-base-uncased |
-| Optimizer | AdamW |
-| Learning rate | 2e-5 (linear warmup 10%) |
-| Weight decay | 0.01 |
-| Batch size | 32 |
-| Epochs | 5 (best at epoch 2) |
-| Max sequence length | 64 tokens |
-| Gradient clip norm | 1.0 |
-
-### Comparison: BiLSTM + Self-Attention
-
-```
-Input tokens (headline, max 50 tokens)
-       │
-  Embedding  128-dim  ── Xavier init (or GloVe 6B fine-tuned)
-       │
-  Bidirectional LSTM × 3 layers
-  (256 hidden units/direction = 512 total · dropout 0.4)
-       │
-  Additive Self-Attention ──► per-token weights (interpretable)
-       │
-  LayerNorm
-       │
-  FC(512 → 256) → GELU → Dropout(0.4)
-       │
-  FC(256 → 3) → Softmax
-       │
-  {Negative, Neutral, Positive}
-```
+| Temporal trends | Hourly/daily sentiment score charts and source heatmaps |
 
 ---
 
@@ -113,20 +41,62 @@ Input tokens (headline, max 50 tokens)
 | BiLSTM + Self-Attention | 76.0% | 0.705 | 0.882 | 12.4 M |
 | **DistilBERT fine-tuned** | **80.4%** | **0.753** | **0.919** | **66 M** |
 
-> DistilBERT achieves **+4.4% accuracy** and **+3.7% ROC-AUC** over the BiLSTM baseline,
-> with stronger generalization on the Negative and Positive classes.
+DistilBERT is the deployed model. BiLSTM results are included for comparison — both models were trained on the same dataset and label scheme.
 
-### Per-Class Breakdown (DistilBERT)
+### DistilBERT Per-Class Breakdown
 
 | Class | Precision | Recall | F1 | Support |
 |---|---|---|---|---|
 | Negative | 0.81 | 0.78 | 0.80 | 12,211 |
 | Neutral | 0.68 | 0.53 | 0.60 | 7,129 |
 | Positive | 0.83 | 0.91 | 0.87 | 21,591 |
-| **Overall** | **0.78** | **0.74** | **0.75** | **40,931** |
 
-> The Neutral class is hardest (F1 0.60) because news categories like Science and Business
-> do not map cleanly to a single sentiment from text alone.
+> The Neutral class (F1 0.60) is hardest — categories like Business and Science
+> contain headlines with mixed sentiment that category-based labels cannot cleanly resolve.
+
+---
+
+## Architecture
+
+### Deployed: DistilBERT Fine-tuned
+
+```
+Input headline (raw text, max 64 WordPiece tokens)
+       │
+  DistilBERT encoder — 6 Transformer layers, 768 hidden dims, 66 M params
+       │
+  [CLS] representation (768-dim)
+       │
+  Pre-classifier FC(768 → 768) → GELU → Dropout(0.2)
+       │
+  Classifier FC(768 → 3)
+       │
+  {Negative, Neutral, Positive}
+```
+
+| Hyperparameter | Value |
+|---|---|
+| Base model | distilbert-base-uncased |
+| Optimizer | AdamW, lr = 2e-5, warmup 10% |
+| Batch size | 32 |
+| Epochs | 5 (best at epoch 2) |
+| Max length | 64 tokens |
+
+### Comparison: BiLSTM + Self-Attention
+
+```
+Input tokens (max 50)
+       │
+  Embedding 128-dim (Xavier init, optional GloVe 6B)
+       │
+  Bidirectional LSTM × 3 layers (256 hidden/direction, dropout 0.4)
+       │
+  Additive Self-Attention → context vector + interpretable weights
+       │
+  LayerNorm → FC(512→256) → GELU → Dropout → FC(256→3)
+       │
+  {Negative, Neutral, Positive}
+```
 
 ---
 
@@ -135,62 +105,54 @@ Input tokens (headline, max 50 tokens)
 ```
 Sentiment-analysis-using-LSTM/
 │
-├── src/                          # Core library (pip install -e .)
+├── src/
 │   ├── data/
-│   │   ├── preprocessor.py       # Clean → tokenize → lemmatize → encode (BiLSTM)
-│   │   ├── dataset.py            # PyTorch Dataset + stratified DataModule (BiLSTM)
-│   │   └── bert_dataset.py       # HuggingFace tokenized dataset + DataModule (DistilBERT)
+│   │   ├── preprocessor.py       # Tokenize → lemmatize → encode (BiLSTM)
+│   │   ├── dataset.py            # PyTorch Dataset + DataModule (BiLSTM)
+│   │   └── bert_dataset.py       # HuggingFace tokenized dataset (DistilBERT)
 │   ├── models/
 │   │   ├── lstm.py               # BiLSTMWithAttention, BaselineLSTM, StackedBiGRU
-│   │   └── transformer.py        # DistilBertSentiment wrapper (fine-tuning)
+│   │   └── transformer.py        # DistilBertSentiment wrapper
 │   ├── training/
 │   │   ├── trainer.py            # AdamW + LR schedule + early stopping + MLflow
-│   │   └── evaluator.py          # Acc, F1, AUC, confusion matrix, per-example preds
+│   │   └── evaluator.py          # Accuracy, F1, AUC, confusion matrix
 │   └── utils/
-│       ├── config.py             # YAML loader + device selection (CUDA/MPS/CPU)
-│       ├── metrics.py            # Sklearn metric wrappers
-│       ├── visualization.py      # Plotly: loss curves, confusion matrix, attention
-│       ├── news_feed.py          # RSS fetcher + batch sentiment annotation (both models)
-│       ├── embeddings.py         # GloVe / FastText pre-trained embedding loader
-│       └── trend_analysis.py     # Temporal sentiment trend aggregation + Plotly charts
+│       ├── config.py             # YAML config loader + device selection
+│       ├── news_feed.py          # RSS fetcher + batch inference (both models)
+│       ├── trend_analysis.py     # Temporal sentiment trend charts
+│       ├── embeddings.py         # GloVe pre-trained embedding loader
+│       └── visualization.py      # Plotly: loss curves, confusion matrix
 │
-├── api/                          # FastAPI REST backend
-│   ├── main.py                   # Lifespan model loading, CORS, endpoints
+├── api/
+│   ├── main.py                   # FastAPI endpoints
 │   └── schemas.py                # Pydantic v2 request/response models
 │
 ├── app/
-│   └── streamlit_app.py          # 4-tab dashboard (Single · Batch · Live News · Arch)
-│                                 # Auto-selects DistilBERT if available, falls back to BiLSTM
+│   └── streamlit_app.py          # 4-tab Streamlit dashboard
 │
 ├── scripts/
-│   ├── train_bert.py             # Fine-tune DistilBERT (primary — recommended)
+│   ├── train_bert.py             # Fine-tune DistilBERT (primary)
 │   ├── train.py                  # Train BiLSTM/GRU/LSTM (comparison)
-│   ├── evaluate.py               # Checkpoint evaluation + JSON report
-│   ├── predict.py                # CLI inference: single / file / JSON output
-│   ├── compare_models.py         # Trains all BiLSTM architectures + comparison plot
-│   ├── export_onnx.py            # ONNX export + verify + benchmark (BiLSTM)
-│   └── download_glove.py         # Download GloVe 6B word vectors from Stanford NLP
-│
-├── notebooks/
-│   └── original_exploration.ipynb  # Original EDA and model experiments
+│   ├── evaluate.py               # Evaluate checkpoint on test set
+│   ├── predict.py                # CLI inference
+│   ├── compare_models.py         # Train all BiLSTM variants + comparison plot
+│   ├── export_onnx.py            # ONNX export for BiLSTM
+│   └── download_glove.py         # Download GloVe 6B vectors
 │
 ├── tests/
-│   ├── test_models.py            # Output shape, attention sum, NaN checks
-│   └── test_preprocessor.py      # Cleaning, label mapping, encoding tests
+│   ├── test_models.py
+│   └── test_preprocessor.py
 │
 ├── deployment/
-│   ├── Dockerfile                # Multi-stage FastAPI image
-│   ├── Dockerfile.streamlit      # Streamlit image
-│   └── docker-compose.yml        # One-command full stack
+│   ├── Dockerfile
+│   ├── Dockerfile.streamlit
+│   └── docker-compose.yml
 │
 ├── research/
 │   └── paper.tex                 # IEEE conference paper (LaTeX)
 │
-├── .github/workflows/ci.yml      # Unit tests on Python 3.10 and 3.11
-├── .streamlit/config.toml        # Streamlit theme
-├── app.py                        # Root entry-point for Streamlit Community Cloud
-├── packages.txt                  # System deps for Streamlit Cloud
-├── configs/config.yaml           # All hyperparameters
+├── app.py                        # Streamlit Cloud entry point
+├── configs/config.yaml
 ├── requirements.txt
 └── setup.py
 ```
@@ -210,29 +172,18 @@ pip install -e .
 ### 2. Get the dataset
 
 Download [News Category Dataset](https://www.kaggle.com/datasets/rmisra/news-category-dataset)
-from Kaggle and place it:
-
-```
-data/News_Category_Dataset_v3.json
-```
+from Kaggle and place it at `data/News_Category_Dataset_v3.json`.
 
 ### 3. Train
 
-#### Recommended: DistilBERT (80.4% test accuracy)
-
 ```bash
-python scripts/train_bert.py                         # 5 epochs, ~55 min GPU
-python scripts/train_bert.py --epochs 3 --lr 2e-5    # Faster run
-```
+# Fine-tune DistilBERT — recommended (80.4% accuracy, ~55 min GPU)
+python scripts/train_bert.py
 
-#### Alternative: BiLSTM + Self-Attention (76.0% test accuracy)
+# Train BiLSTM comparison model (76.0% accuracy, ~25 min GPU)
+python scripts/train.py
 
-```bash
-python scripts/train.py                              # BiLSTM+Attention (~25 min GPU)
-python scripts/train.py --model bigru                # Stacked BiGRU
-python scripts/train.py --model lstm                 # Baseline LSTM
-
-# Optional: train with GloVe pre-trained embeddings
+# Optional: BiLSTM with GloVe embeddings
 python scripts/download_glove.py
 python scripts/train.py --glove-path data/glove/glove.6B.100d.txt
 ```
@@ -240,121 +191,69 @@ python scripts/train.py --glove-path data/glove/glove.6B.100d.txt
 ### 4. Run the app
 
 ```bash
-streamlit run app/streamlit_app.py           # http://localhost:8501
+streamlit run app/streamlit_app.py
 ```
 
-The app automatically loads DistilBERT from `checkpoints/distilbert/` if present,
-otherwise falls back to BiLSTM from `checkpoints/best_model.pt`.
+The app loads DistilBERT from `checkpoints/distilbert/` if present, otherwise falls back to the BiLSTM checkpoint.
 
 ### 5. Run the API
 
 ```bash
-uvicorn api.main:app --reload --port 8000    # http://localhost:8000/docs
-```
-
----
-
-## All Commands
-
-### CLI Prediction
-
-```bash
-# Single headline
-python scripts/predict.py --text "Scientists discover breakthrough cancer treatment"
-
-# From file (one headline per line)
-python scripts/predict.py --file my_headlines.txt
-
-# JSON output
-python scripts/predict.py --text "Market crashes amid recession fears" --json
-```
-
-### MLflow Experiment Tracking
-
-```bash
-mlflow ui                    # http://localhost:5000
-# All BiLSTM runs logged automatically during training
-```
-
-### Run Tests
-
-```bash
-pytest tests/ -v --cov=src
+uvicorn api.main:app --reload --port 8000
 ```
 
 ---
 
 ## API Reference
 
-Start: `uvicorn api.main:app --port 8000`  ·  Docs: `http://localhost:8000/docs`
-
 ### `POST /predict`
 
 ```json
-// Request
 { "text": "Scientists discover Alzheimer's cure" }
-
-// Response
+```
+```json
 {
-  "text": "Scientists discover Alzheimer's cure",
   "sentiment": "Positive",
   "confidence": 0.891,
-  "scores": { "Negative": 0.041, "Neutral": 0.068, "Positive": 0.891 },
-  "model_used": "bilstm_attention"
+  "scores": { "Negative": 0.041, "Neutral": 0.068, "Positive": 0.891 }
 }
 ```
 
 ### `POST /predict/batch`
 
 ```json
-// Request
-{ "texts": ["Headline 1", "Headline 2", "..."] }
+{ "texts": ["Headline 1", "Headline 2"] }
 ```
 
 ### `GET /health`
 
 ```json
-{ "status": "healthy", "models_loaded": ["bilstm_attention"], "version": "1.0.0" }
+{ "status": "healthy", "version": "1.0.0" }
 ```
 
 ---
 
 ## Deployment
 
-### Option 1 — Streamlit Community Cloud (free public URL)
+### Streamlit Community Cloud
 
-1. Push this repo to GitHub — `preprocessor.pkl` is already committed
-2. Upload `checkpoints/distilbert.tar.gz` to Google Drive and set `DISTILBERT_GDRIVE_ID` in `app/streamlit_app.py`
-3. Go to [share.streamlit.io](https://share.streamlit.io) → **New app**
-4. Select `app.py` as the entry point
-5. Your live URL: `https://<your-app>.streamlit.app`
+The live app at **https://sentiment-newsanalysis.streamlit.app/** is deployed from this repository.
+On first boot, `app.py` downloads the DistilBERT checkpoint (~236 MB) from Google Drive and caches it in `/tmp/`.
 
-> On first boot, `app.py` downloads `distilbert.tar.gz` (~236 MB) from Google Drive
-> and extracts it to `/tmp/distilbert/`. Subsequent boots use the cached copy.
-
-### Option 2 — Docker (local / cloud server)
+### Docker
 
 ```bash
-cd deployment
-docker-compose up --build
+cd deployment && docker-compose up --build
 # API:  http://localhost:8000/docs
 # UI:   http://localhost:8501
 ```
-
-### Option 3 — Docker Hub + Cloud (AWS/GCP/Azure)
-
-Tag a release (`git tag v1.0.0 && git push --tags`) to trigger GitHub Actions
-automatic push to Docker Hub, then pull and run on any cloud VM.
 
 ---
 
 ## Live News Feature
 
-Fetch and analyse real headlines from major sources programmatically:
-
 ```python
 from src.utils.news_feed import fetch_headlines, analyze_headlines
-from src.utils.trend_analysis import compute_trend, make_trend_figure
 from transformers import DistilBertTokenizerFast
 from src.models.transformer import DistilBertSentiment
 
@@ -366,35 +265,28 @@ headlines = analyze_headlines(headlines, model, None, device, tokenizer=tokenize
 
 for h in headlines:
     print(f"{h.sentiment:8s} ({h.confidence:.0%})  {h.title}")
-
-# Temporal trend — group by hour and plot sentiment score over time
-df  = compute_trend(headlines, bucket="hour")
-fig = make_trend_figure({"BBC News": df})
-fig.show()
 ```
 
-Available sources: `BBC News`, `NPR`, `CNN`, `TechCrunch`, `The Guardian`, `Al Jazeera`
+Sources: `BBC News`, `NPR`, `CNN`, `TechCrunch`, `The Guardian`, `Al Jazeera`
 
 ---
 
 ## Research Paper
 
-A complete IEEE-format conference paper is in [research/paper.tex](research/paper.tex).
+An IEEE-format conference paper is in [research/paper.tex](research/paper.tex).
 
-Covers: motivation, related work, dataset construction, DistilBERT fine-tuning,
-BiLSTM-SA architecture comparison, results analysis, and deployment pipeline.
+Covers: dataset construction, DistilBERT fine-tuning, BiLSTM architecture comparison,
+per-class analysis, and the full deployment pipeline.
 
-Compile:
 ```bash
-cd research && pdflatex paper.tex && bibtex paper && pdflatex paper.tex
+cd research && pdflatex paper.tex
 ```
 
 ---
 
 ## Author
 
-**Karthik Mulugu**  
-M.S. in Computer Science (AI/ML) — University at Buffalo, SUNY
+**Karthik Mulugu** — M.S. Computer Science (AI/ML), University at Buffalo, SUNY
 
 - GitHub: [Karthik0809](https://github.com/Karthik0809)
 - LinkedIn: [linkedin.com/in/karthik0809](https://www.linkedin.com/in/karthik0809)
@@ -402,6 +294,4 @@ M.S. in Computer Science (AI/ML) — University at Buffalo, SUNY
 
 ---
 
-## License
-
-MIT License — see [LICENSE](LICENSE) for details.
+MIT License

@@ -339,21 +339,17 @@ initialisation with no change to the rest of the model.
 \section{Experiments and Results}
 \label{sec:experiments}
 
-\subsection{Baseline and Comparative Models}
-We evaluate three architectures:
+\subsection{Models Evaluated}
+We compare two architectures trained and evaluated on identical
+data splits:
 
 \begin{itemize}
-  \item \textbf{LSTM-Baseline}: 2-layer unidirectional LSTM, last hidden
-        state, $h = 256$, $d_e = 128$.
-  \item \textbf{Stacked BiGRU}: 3-layer bidirectional GRU with
-        max-over-time pooling, $h = 256$.
-  \item \textbf{BiLSTM-SA (proposed)}: as described in
-        Section~\ref{sec:method}.
+  \item \textbf{BiLSTM-SA}: the recurrent architecture described in
+        Section~\ref{sec:method}, serving as the lightweight baseline.
+  \item \textbf{DistilBERT (fine-tuned)}: \texttt{distilbert-base-uncased}
+        fine-tuned end-to-end with a linear classification head,
+        serving as the primary deployed model.
 \end{itemize}
-
-We fine-tune DistilBERT (\texttt{distilbert-base-uncased}) as the
-primary deployed model, and evaluate BiLSTM-SA as a lightweight
-comparison.
 
 \subsection{Main Results}
 
@@ -441,8 +437,9 @@ Al Jazeera), runs batch inference, renders per-source
 sentiment distributions, and displays \textit{temporal sentiment trend charts}
 grouping headlines by publication hour or day into mean sentiment
 scores (Section~\ref{subsec:trend}); and (4) a model architecture
-reference tab. The app is deployed publicly on Streamlit Community
-Cloud directly from the GitHub repository.
+reference tab. The app is deployed publicly at
+\url{https://sentiment-newsanalysis.streamlit.app/} via Streamlit
+Community Cloud, served directly from the GitHub repository.
 
 \subsection{Temporal Sentiment Trend Analysis}
 \label{subsec:trend}
