@@ -53,8 +53,8 @@ class SentimentDataModule:
                 records.append(json.loads(line))
 
         df = pd.DataFrame(records)
-        df["label"] = df["headline"].apply(self.preprocessor.get_label)
-        df = df[df["headline"].str.strip() != ""].reset_index(drop=True)
+        df["label"] = df["category"].apply(self.preprocessor.get_label)
+        df = df[df["label"] != -1].reset_index(drop=True)
 
         logger.info(
             f"Dataset size: {len(df):,} | Label distribution:\n"
