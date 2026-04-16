@@ -39,7 +39,7 @@ SAMPLE_HEADLINES = [
 
 
 # ── Model loading (cached) ────────────────────────────────────────────
-GDRIVE_FILE_ID = "1Gtcx25zherCBc7iIuoyYDgd5-qJDaIpG"
+GDRIVE_FILE_ID = "1VqAN-wLViwMJMjQYOxeMEQfIEJx72Ihl"
 
 def _get_model_path() -> str:
     """Return path to best_model.pt, downloading from Google Drive if needed."""
