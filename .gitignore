@@ -25,10 +25,13 @@ ENV/
 *.ipynb
 
 # Data (large files — use DVC or download separately)
-data/
+/data/
 *.json
 *.csv
 *.parquet
+
+# Ensure src/data package is always tracked
+!src/data/
 
 # Model checkpoints (large binaries — weight files only)
 checkpoints/*.pt
