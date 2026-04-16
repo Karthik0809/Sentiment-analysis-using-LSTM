@@ -534,9 +534,47 @@ with tab_live:
 # Tab 4: Model Architecture
 # ──────────────────────────────────────────────────────────────────────
 with tab_about:
-    active_label = "DistilBERT" if model_type == "distilbert" else "BiLSTM + Self-Attention"
+    active_label = "DistilBERT (fine-tuned)" if model_type == "distilbert" else "BiLSTM + Self-Attention"
     st.subheader(f"Active Model: {active_label}")
-    st.markdown("""
+
+    if model_type == "distilbert":
+        st.markdown("""
+    ```
+    Input headline (raw text, max 64 WordPiece tokens)
+         │
+    ┌────▼──────────────────────────────────────────────┐
+    │  DistilBERT Encoder                                │
+    │  6 Transformer layers · 768 hidden dims            │
+    │  12 attention heads · 66 M parameters              │
+    │  Pre-trained on BookCorpus + Wikipedia             │
+    └────┬──────────────────────────────────────────────┘
+         │  [CLS] token representation  768-dim
+    ┌────▼──────────────────────────┐
+    │  Pre-classifier FC(768→768)    │  → GELU
+    │  Dropout(0.2)                  │
+    └────┬──────────────────────────┘
+         │
+    ┌────▼─────────────────────┐
+    │  Classifier FC(768→3)     │
+    └──────────────────────────┘
+    ```
+
+    **Fine-tuning details**
+    | Hyperparameter | Value |
+    |---|---|
+    | Base model | distilbert-base-uncased |
+    | Optimiser | AdamW |
+    | Learning rate | 2e-5 (linear warmup 10%) |
+    | Weight decay | 0.01 |
+    | Batch size | 32 |
+    | Epochs | 5 (best at epoch 2) |
+    | Max sequence length | 64 tokens |
+    | Grad clip norm | 1.0 |
+    | Test accuracy | **80.4%** |
+    | ROC-AUC | **0.919** |
+    """)
+    else:
+        st.markdown("""
     ```
     Input (headline tokens)
          │
@@ -552,12 +590,8 @@ with tab_about:
          │  [B, T, 512]
     ┌────▼──────────────────────┐
     │  Additive Self-Attention   │  → context vector [B, 512]
-    │  + attention weights       │     + interpretable weights
+    │  + interpretable weights   │
     └────┬──────────────────────┘
-         │
-    ┌────▼─────────────────┐
-    │  LayerNorm [B, 512]   │
-    └────┬─────────────────┘
          │
     ┌────▼──────────────────────────┐
     │  FC(512→256) → GELU → Drop    │
@@ -577,14 +611,13 @@ with tab_about:
     | Batch size | 64 |
     | Max epochs | 25 |
     | Early stopping | patience = 5 |
-    | Grad clip norm | 1.0 |
-    | Loss | CrossEntropyLoss |
+    | Test accuracy | **76.0%** |
     """)
 
     st.subheader("Dataset")
     st.markdown("""
     - **Source**: HuffPost News Category Dataset (Kaggle)
-    - **Size**: ~209 K articles (2012–2022)
+    - **Size**: 204,651 labelled samples from 209 K articles (2012–2022)
     - **Classes**: Negative (0) / Neutral (1) / Positive (2)
-    - **Label mapping**: category → sentiment (12 positive, 8 negative, 9 neutral categories)
+    - **Label mapping**: news category → sentiment (category-based heuristic)
     """)

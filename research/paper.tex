@@ -27,8 +27,8 @@
 \begin{document}
 
 % ── Title ──────────────────────────────────────────────────────────
-\title{Multi-Class Sentiment Analysis of News Headlines Using\\
-       Bidirectional LSTM with Self-Attention Mechanism}
+\title{Multi-Class Sentiment Analysis of News Headlines:\\
+       A Comparative Study of BiLSTM and Fine-tuned DistilBERT}
 
 \author{
   \IEEEauthorblockN{Karthik Mulugu}
@@ -46,32 +46,28 @@
 \begin{abstract}
 Sentiment analysis of news headlines is a challenging natural language
 processing (NLP) task due to the terse, ambiguous, and domain-specific
-nature of journalistic text. This paper presents a systematic study of
-recurrent neural network architectures for three-class (positive,
-neutral, negative) sentiment classification of news headlines, using
-the HuffPost News Category Dataset containing 209,527 articles spanning
-ten years. We propose a Bidirectional Long Short-Term Memory (BiLSTM)
-network augmented with an additive self-attention mechanism and layer
-normalization that achieves a test accuracy of \textbf{90.3\%} and a
-macro-averaged F1-score of \textbf{0.891}, outperforming a standard
-LSTM baseline (87.4\%) and a Stacked Bidirectional GRU (89.1\%).
-Ablation studies confirm the individual contributions of
-bidirectionality (\texttt{+3.6\%} accuracy), attention (\texttt{+1.8\%}
-accuracy), and layer normalization (\texttt{+0.6\%} accuracy). We
-further compare our approach against a fine-tuned DistilBERT model and
-demonstrate that the proposed architecture achieves competitive
-performance at a fraction of the inference cost. The trained model is
-deployed as a REST API (FastAPI) with an interactive Streamlit
-web application featuring live RSS news ingestion and temporal
-sentiment trend visualisation, with full Docker and cloud-native
-deployment.
+nature of journalistic text. This paper presents a comparative study of
+recurrent and transformer-based neural network architectures for
+three-class (positive, neutral, negative) sentiment classification of
+news headlines, using the HuffPost News Category Dataset containing
+204,651 labelled samples spanning ten years. We implement and evaluate
+a Bidirectional Long Short-Term Memory (BiLSTM) network augmented with
+an additive self-attention mechanism and layer normalization (76.0\%
+test accuracy, macro-F1 0.705), and fine-tune DistilBERT
+\cite{sanh2019distilbert} on the same data, achieving \textbf{80.4\%}
+test accuracy, macro-F1 \textbf{0.753}, and ROC-AUC \textbf{0.919}.
+We show that the category-based labeling scheme imposes a ceiling on
+achievable accuracy, with the Neutral class proving hardest across all
+models (F1 0.60). The fine-tuned DistilBERT model is deployed as a
+REST API (FastAPI) with an interactive Streamlit web application
+featuring live RSS news ingestion and temporal sentiment trend
+visualisation, with full Docker and cloud-native deployment.
 \end{abstract}
 
 \begin{IEEEkeywords}
-sentiment analysis, LSTM, bidirectional LSTM, self-attention,
-GloVe, temporal trend analysis, news headlines, natural language
-processing, deep learning, FastAPI, Streamlit, MLflow, ONNX,
-HuffPost dataset
+sentiment analysis, DistilBERT, fine-tuning, bidirectional LSTM,
+self-attention, temporal trend analysis, news headlines, natural language
+processing, deep learning, FastAPI, Streamlit, HuffPost dataset
 \end{IEEEkeywords}
 
 % ── I. Introduction ─────────────────────────────────────────────────
@@ -105,24 +101,21 @@ selectively focus on sentiment-bearing tokens.
 
 In this paper we make the following contributions:
 \begin{enumerate}
-  \item A reproducible benchmark of three recurrent architectures—
-        Baseline LSTM, Stacked Bidirectional GRU, and BiLSTM with
-        Self-Attention—on a large-scale, three-class news headline
-        dataset.
-  \item An ablation study quantifying the impact of bidirectionality,
-        attention, and layer normalization.
-  \item A comparison with DistilBERT \cite{sanh2019distilbert} showing
-        that our BiLSTM+Attention model achieves competitive performance
-        with $\sim$40$\times$ fewer parameters and $\sim$10$\times$
-        faster CPU inference.
+  \item A direct empirical comparison between a custom BiLSTM with
+        self-attention (76.0\% accuracy) and a fine-tuned DistilBERT
+        (80.4\% accuracy) on the same category-labelled headline dataset.
+  \item An analysis of the accuracy ceiling imposed by category-based
+        pseudo-labelling, identifying the Neutral class as the primary
+        bottleneck (F1 0.60) across all architectures.
   \item Integration of GloVe \cite{pennington2014glove} pre-trained
-        word vectors as an optional embedding initialisation strategy,
-        fine-tuned end-to-end to improve coverage of low-frequency
-        vocabulary.
+        word vectors as an optional embedding initialisation for the
+        BiLSTM variant, fine-tuned end-to-end to improve coverage of
+        low-frequency vocabulary.
   \item An open-source, production-ready system with a REST API,
         interactive Streamlit dashboard, live RSS news feed with
-        temporal sentiment trend analysis, ONNX inference
-        optimization, and MLflow experiment tracking.
+        temporal sentiment trend analysis, and MLflow experiment
+        tracking, with the DistilBERT model deployed as the active
+        inference endpoint.
 \end{enumerate}
 
 The remainder of this paper is structured as follows.
@@ -197,12 +190,13 @@ Total articles & 209,527 \\
 Unique categories & 42 \\
 Date range & Jan 2012 – Sep 2022 \\
 Avg. headline length (words) & 9.6 \\
-Positive samples (after mapping) & 74,218 \\
-Neutral samples & 36,491 \\
-Negative samples & 58,627 \\
-Training set & 121,868 \\
-Validation set & 15,233 \\
-Test set & 15,234 \\
+Positive samples (after mapping) & 107,952 \\
+Neutral samples & 35,645 \\
+Negative samples & 61,054 \\
+Total labelled samples & 204,651 \\
+Training set & 143,255 \\
+Validation set & 20,465 \\
+Test set & 40,931 \\
 \bottomrule
 \end{tabular}
 \end{table}
@@ -311,12 +305,20 @@ where $\mathbf{W} \in \mathbb{R}^{2h \times 2h}$ and
 $\mathbf{v} \in \mathbb{R}^{2h}$ are learned parameters.
 
 \subsection{Training Details}
-Models are trained with AdamW \cite{loshchilov2019adamw} (learning rate
-$\eta = 10^{-3}$, weight decay $\lambda = 10^{-5}$) and cross-entropy
-loss. Gradient norms are clipped to 1.0. A
-ReduceLROnPlateau scheduler halves $\eta$ when validation loss
-plateaus for two epochs. Early stopping with patience 5 prevents
-overfitting. All experiments are run on an NVIDIA A100 GPU.
+
+\textbf{BiLSTM-SA.} Trained with AdamW \cite{loshchilov2019adamw}
+(learning rate $\eta = 10^{-3}$, weight decay $\lambda = 10^{-5}$)
+and cross-entropy loss. A ReduceLROnPlateau scheduler halves $\eta$
+when validation loss plateaus for two consecutive epochs. Early
+stopping (patience 5) saves the best checkpoint.
+
+\textbf{DistilBERT.} Fine-tuned from \texttt{distilbert-base-uncased}
+with AdamW ($\eta = 2 \times 10^{-5}$, weight decay $0.01$), a linear
+warmup over the first 10\% of total training steps, and cross-entropy
+loss. Maximum sequence length is 64 WordPiece tokens (sufficient for
+news headlines averaging 9.6 words). Training converged in 5 epochs
+(best validation accuracy at epoch 2), with gradient norms clipped to
+1.0. All experiments were run on an NVIDIA RTX 4060 Laptop GPU (8 GB VRAM).
 
 \subsection{GloVe Pre-trained Word Embeddings}
 \label{subsec:glove}
@@ -349,8 +351,9 @@ We evaluate three architectures:
         Section~\ref{sec:method}.
 \end{itemize}
 
-We additionally fine-tune DistilBERT (\texttt{distilbert-base-uncased})
-as an upper-bound reference.
+We fine-tune DistilBERT (\texttt{distilbert-base-uncased}) as the
+primary deployed model, and evaluate BiLSTM-SA as a lightweight
+comparison.
 
 \subsection{Main Results}
 
@@ -363,53 +366,64 @@ as an upper-bound reference.
 \textbf{Model} & \textbf{Acc.} & \textbf{F1\textsubscript{M}} &
 \textbf{AUC} & \textbf{Params} \\
 \midrule
-LSTM-Baseline   & 0.874 & 0.861 & 0.942 & 6.7 M \\
-Stacked BiGRU   & 0.891 & 0.878 & 0.958 & 9.1 M \\
-BiLSTM-SA (ours) & \textbf{0.903} & \textbf{0.891} & \textbf{0.968} & 12.4 M \\
+BiLSTM-SA       & 0.760 & 0.705 & 0.882 & 12.4 M \\
 \midrule
-DistilBERT\textsuperscript{†} & 0.918 & 0.906 & 0.981 & 66 M \\
+\textbf{DistilBERT (fine-tuned)} & \textbf{0.804} & \textbf{0.753} & \textbf{0.919} & \textbf{66 M} \\
 \bottomrule
-\multicolumn{5}{l}{\textsuperscript{†} Fine-tuned; shown for reference only.}
 \end{tabular}
 \end{table}
 
-Table~\ref{tab:results} shows that BiLSTM-SA outperforms both recurrent
-baselines on all metrics while remaining $\sim$5$\times$ smaller than
-DistilBERT. The gap in accuracy (1.5\%) relative to DistilBERT is
-acceptable given the 5$\times$ parameter efficiency and $\sim$10$\times$
-CPU throughput advantage.
-
-\subsection{Ablation Study}
-Ablation experiments confirm the contribution of each architectural
-component. Removing bidirectionality causes the largest performance
-drop, confirming that forward-backward context is critical for the
-short, dense structure of news headlines. Additive self-attention
-further improves over the last-hidden-state baseline by selectively
-weighting sentiment-bearing tokens, and layer normalization stabilises
-gradient flow during training.
+Table~\ref{tab:results} shows that fine-tuned DistilBERT outperforms
+the recurrent baseline by 4.4 percentage points in accuracy and 3.7
+points in ROC-AUC. Both models are limited by the noise in
+category-based pseudo-labels; the Neutral class is hardest with
+F1-scores of 0.49 (BiLSTM) and 0.60 (DistilBERT) respectively,
+as ``neutral'' categories (Science, Technology, Business) contain
+headlines that span the full sentiment spectrum.
 
 \subsection{Per-Class Analysis}
-The positive class achieves the highest F1-score (0.923) owing to
-the strong lexical signal in wellness and entertainment headlines.
-The neutral class is hardest to classify (F1 = 0.841), as scientific
-and business news often shares vocabulary with both positive and
-negative categories.
+Table~\ref{tab:perclass} shows the per-class breakdown for DistilBERT.
+The Positive class benefits from strong lexical signals in wellness and
+entertainment headlines ($F_1 = 0.87$). The Negative class is
+moderately separable via political and crime vocabulary ($F_1 = 0.80$).
+The Neutral class is hardest ($F_1 = 0.60$): categories like Business,
+Science, and Technology contain headlines that range from celebratory
+to alarming, making category-derived neutral labels unreliable.
 
-\subsection{Attention Visualization}
-Qualitative inspection of attention weights reveals that the model
-correctly focuses on emotionally salient tokens. For example, for the
-headline \textit{``Scientists discover breakthrough in cancer
-treatment''}, the tokens \textit{discover} and \textit{breakthrough}
-receive the highest attention weights ($\alpha = 0.42$, $0.38$
-respectively), capturing the positive sentiment.
+\begin{table}[h]
+\caption{DistilBERT Per-Class Metrics (Test Set)}
+\label{tab:perclass}
+\centering
+\begin{tabular}{lcccr}
+\toprule
+\textbf{Class} & \textbf{Prec.} & \textbf{Rec.} & \textbf{F1} & \textbf{Support} \\
+\midrule
+Negative & 0.81 & 0.78 & 0.80 & 12,211 \\
+Neutral  & 0.68 & 0.53 & 0.60 &  7,129 \\
+Positive & 0.83 & 0.91 & 0.87 & 21,591 \\
+\midrule
+Macro avg & 0.77 & 0.74 & 0.75 & 40,931 \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\subsection{Attention Visualization (BiLSTM)}
+Qualitative inspection of BiLSTM attention weights reveals that the
+model focuses on emotionally salient tokens. For the headline
+\textit{``Scientists discover breakthrough in cancer treatment''}, the
+tokens \textit{discover} and \textit{breakthrough} receive the highest
+attention weights, capturing positive sentiment. DistilBERT does not
+expose explicit token-level attention weights in the deployed
+configuration, but its contextual representations implicitly capture
+similar cues through multi-head self-attention across all layers.
 
 % ── VI. Deployment ──────────────────────────────────────────────────
 \section{Deployment and System Design}
 \label{sec:deployment}
 
 \subsection{REST API}
-The trained model is served via a \textbf{FastAPI} \cite{fastapi}
-REST API with Pydantic v2 schema validation, supporting:
+The fine-tuned DistilBERT model is served via a \textbf{FastAPI}
+\cite{fastapi} REST API with Pydantic v2 schema validation, supporting:
 \begin{itemize}
   \item \texttt{POST /predict} — single headline, synchronous inference.
   \item \texttt{POST /predict/batch} — up to 100 headlines, batched
@@ -473,27 +487,32 @@ configuration are available on GitHub.
 \section{Conclusion}
 \label{sec:conclusion}
 
-We presented BiLSTM-SA, a Bidirectional LSTM with additive
-self-attention and layer normalization, for three-class sentiment
-classification of news headlines. Trained on 170 K HuffPost articles,
-the model achieves 90.3\% accuracy and a macro-F1 of 0.891, surpassing
-recurrent baselines by up to 2.9 percentage points. Ablation studies
-confirm the benefit of each architectural component. Compared to
-transformer-based models, BiLSTM-SA provides a compelling trade-off
-between performance and computational efficiency, making it suitable
-for high-throughput, resource-constrained production deployments.
+We presented a comparative study of BiLSTM with additive self-attention
+(76.0\% accuracy, macro-F1 0.705) and fine-tuned DistilBERT (80.4\%
+accuracy, macro-F1 0.753, ROC-AUC 0.919) for three-class sentiment
+classification of 204 K HuffPost news headlines. DistilBERT's
+pre-trained contextual representations yield a consistent +4.4\%
+accuracy improvement over the recurrent baseline. Both architectures
+are bounded by the quality of category-based pseudo-labels, with the
+Neutral class being the primary bottleneck (F1 0.60). The fine-tuned
+DistilBERT model is deployed in a production-ready pipeline with a REST
+API, Streamlit dashboard, and live news feed with temporal trend
+analysis.
 
 \subsection*{Future Work}
 \begin{itemize}
-  \item Explore multi-head self-attention and Transformer encoder
-        blocks as drop-in replacements for the BiLSTM layers to
-        further close the gap with DistilBERT.
-  \item Extend to aspect-level and fine-grained sentiment analysis
-        using span-level annotations, enabling more nuanced
-        characterisation of mixed-sentiment headlines.
+  \item Replace category-based pseudo-labels with human-annotated or
+        model-distilled sentiment labels to break the accuracy ceiling
+        and improve Neutral-class precision.
+  \item Fine-tune from a sentiment-specialised checkpoint
+        (e.g., FinBERT \cite{araci2019finbert}) to leverage domain
+        knowledge for financial and political news.
+  \item Extend to aspect-level sentiment analysis, enabling nuanced
+        characterisation of mixed-sentiment headlines that reference
+        both positive and negative events.
   \item Investigate continual learning to adapt to emerging news
-        topics and vocabulary drift without full retraining,
-        leveraging the live RSS pipeline as a stream of new examples.
+        vocabulary drift using the live RSS pipeline as a stream of
+        new training examples.
 \end{itemize}
 
 % ── References ──────────────────────────────────────────────────────
