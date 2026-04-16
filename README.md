@@ -1,8 +1,8 @@
 # News Headline Sentiment Analysis — BiLSTM + Self-Attention
 
 A production-ready, end-to-end NLP system for **three-class sentiment classification**
-of news headlines. Trained on 170 K+ HuffPost articles, achieving **90.3% accuracy**
-and **0.891 macro-F1**.
+of news headlines. Trained on 170 K+ HuffPost articles, achieving **76.3% accuracy**
+and **0.743 macro-F1**.
 
 [![Python 3.10+](https://img.shields.io/badge/Python-3.10%2B-blue.svg)](https://www.python.org/)
 [![PyTorch](https://img.shields.io/badge/PyTorch-2.2%2B-orange.svg)](https://pytorch.org/)
@@ -32,8 +32,8 @@ and **0.891 macro-F1**.
 | Task | 3-class sentiment (Negative / Neutral / Positive) |
 | Dataset | HuffPost News Category Dataset — 209 K articles, 42 categories |
 | Best model | BiLSTM + Additive Self-Attention + LayerNorm |
-| Test accuracy | **90.3%** |
-| Macro F1 | **0.891** |
+| Test accuracy | **76.3%** |
+| Macro F1 | **0.743** |
 | REST API | FastAPI — single + batch inference |
 | Frontend | Streamlit — 4 tabs including Live News Feed |
 | Deployment | Docker + Streamlit Community Cloud |
@@ -85,23 +85,12 @@ Input tokens (headline, max 50 tokens)
 
 ### Model Comparison
 
-| Model | Accuracy | F1 Macro | ROC-AUC | Params |
-|---|---|---|---|---|
-| Baseline LSTM | 87.4% | 0.861 | 0.942 | 6.7 M |
-| Stacked BiGRU | 89.1% | 0.878 | 0.958 | 9.1 M |
-| **BiLSTM-SA (ours)** | **90.3%** | **0.891** | **0.968** | **12.4 M** |
-| DistilBERT (reference) | 91.8% | 0.906 | 0.981 | 66 M |
+| Model | Accuracy | F1 Macro | Params |
+|---|---|---|---|
+| **BiLSTM-SA (ours)** | **76.3%** | **0.743** | **12.4 M** |
 
-> BiLSTM-SA is within 1.5% of DistilBERT while being **5× smaller** and **~10× faster** on CPU.
-
-### Ablation Study
-
-| Configuration | Accuracy |
-|---|---|
-| BiLSTM-SA (full model) | **90.3%** |
-| — Layer Normalization | 89.7% |
-| — Self-Attention | 88.5% |
-| — Bidirectional | 86.7% |
+> Labels derived from VADER linguistic sentiment (compound score thresholds), not news categories.
+> Lower accuracy vs. category-based training reflects genuine sentiment ambiguity in news headlines.
 
 ---
 
@@ -115,8 +104,7 @@ news-sentiment-bilstm/
 │   │   ├── preprocessor.py       # Clean → tokenize → lemmatize → encode
 │   │   └── dataset.py            # PyTorch Dataset + stratified DataModule
 │   ├── models/
-│   │   ├── lstm.py               # BiLSTMWithAttention, BaselineLSTM, StackedBiGRU
-│   │   └── transformer.py        # DistilBERT fine-tuning (ablation reference)
+│   │   └── lstm.py               # BiLSTMWithAttention, BaselineLSTM, StackedBiGRU
 │   ├── training/
 │   │   ├── trainer.py            # AdamW + LR schedule + early stopping + MLflow
 │   │   └── evaluator.py          # Acc, F1, AUC, confusion matrix, per-example preds

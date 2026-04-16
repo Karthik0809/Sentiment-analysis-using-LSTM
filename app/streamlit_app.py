@@ -517,5 +517,5 @@ with tab_about:
     - **Source**: HuffPost News Category Dataset (Kaggle)
     - **Size**: ~209 K articles (2012–2022)
     - **Classes**: Negative (0) / Neutral (1) / Positive (2)
-    - **Label mapping**: category → sentiment (12 positive, 8 negative, 9 neutral categories)
+    - **Label mapping**: VADER compound score → Negative (≤−0.05) / Neutral / Positive (≥+0.05)
     """)

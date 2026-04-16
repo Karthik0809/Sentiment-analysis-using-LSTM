@@ -27,25 +27,30 @@ def test_clean_removes_urls():
 
 def test_label_positive():
     pp = TextPreprocessor()
-    assert pp.get_label("WELLNESS") == 2
-    assert pp.get_label("SPORTS") == 2
+    assert pp.get_label("Team wins championship in stunning victory") == 2
+    assert pp.get_label("Amazing breakthrough brings hope to millions") == 2
 
 
 def test_label_negative():
     pp = TextPreprocessor()
-    assert pp.get_label("POLITICS") == 0
-    assert pp.get_label("CRIME") == 0
+    assert pp.get_label("Stock market crashes amid recession fears") == 0
+    assert pp.get_label("Deadly attack kills dozens in tragic shooting") == 0
 
 
 def test_label_neutral():
     pp = TextPreprocessor()
-    assert pp.get_label("SCIENCE") == 1
-    assert pp.get_label("TECH") == 1
+    assert pp.get_label("Scientists publish new study on climate data") == 1
+    assert pp.get_label("Government announces budget review committee") == 1
 
 
-def test_label_unknown():
+def test_label_returns_valid_class():
     pp = TextPreprocessor()
-    assert pp.get_label("UNKNOWN_CATEGORY") == -1
+    for headline in [
+        "Markets rise on positive jobs report",
+        "Flood warnings issued across three states",
+        "New policy takes effect next month",
+    ]:
+        assert pp.get_label(headline) in (0, 1, 2)
 
 
 def test_encode_length(preprocessor):
