@@ -102,10 +102,7 @@ def predict(text: str, model, preprocessor, device):
 
 # ── Sidebar ───────────────────────────────────────────────────────────
 with st.sidebar:
-    st.image(
-        "https://upload.wikimedia.org/wikipedia/commons/1/1e/Newspaper_icon.svg",
-        width=60,
-    )
+    st.markdown("## 📰 News Sentiment")
     st.title("About")
     st.info(
         "**Model**: BiLSTM + Self-Attention\n\n"
