@@ -59,7 +59,8 @@ def load_model():
         n_layers=config["model"]["n_layers"],
         dropout=0.0,
     )
-    ckpt = torch.load("checkpoints/best_model.pt", map_location=device)
+    model_path = os.environ.get("SENTIMENT_MODEL_PATH", "checkpoints/best_model.pt")
+    ckpt = torch.load(model_path, map_location=device)
     model.load_state_dict(ckpt["model_state_dict"])
     model.eval()
     return model.to(device), preprocessor, device
