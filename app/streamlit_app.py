@@ -40,7 +40,7 @@ SAMPLE_HEADLINES = [
 
 # ── Model loading (cached) ────────────────────────────────────────────
 # Google Drive IDs — update DISTILBERT_GDRIVE_ID after uploading the zipped model
-BILSTM_GDRIVE_ID    = "1VqAN-wLViwMJMjQYOxeMEQfIEJx72Ihl"
+BILSTM_GDRIVE_ID    = ""   # BiLSTM not hosted on cloud — DistilBERT is primary
 DISTILBERT_GDRIVE_ID = "1lDMz4Vb9rgzfUFHxaj7eAcicHs7B1i0g"
 
 ROOT_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
