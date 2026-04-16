@@ -36,7 +36,17 @@ ENV/
 # Model checkpoints (large binaries — weight files only)
 checkpoints/*.pt
 checkpoints/*.pth
+checkpoints/*.tar.gz
+checkpoints/distilbert/
 # preprocessor.pkl (~840 KB) is committed directly
+
+# Training / evaluation logs
+train_log.txt
+train_bert_log.txt
+eval_out.txt
+
+# Claude Code memory
+.claude/
 
 # Outputs (generated files)
 outputs/
