@@ -456,13 +456,6 @@ at $\bar{s} = 0$. A complementary source $\times$ sentiment heatmap
 source across all six outlets, enabling rapid cross-source
 comparison at a glance.
 
-\subsection{Inference Optimization}
-The model is exported to \textbf{ONNX} (opset 17) using dynamic
-batch axes, achieving a 2--4$\times$ CPU throughput improvement over
-native PyTorch inference when served with ONNXRuntime, enabling
-deployment on CPU-only infrastructure without accuracy loss (max
-output difference $< 10^{-4}$).
-
 \subsection{Experiment Tracking}
 \textbf{MLflow} automatically logs all hyperparameters, per-epoch
 training and validation metrics, learning rate schedule, and the

@@ -134,7 +134,6 @@ Sentiment-analysis-using-LSTM/
 │   ├── evaluate.py               # Evaluate checkpoint on test set
 │   ├── predict.py                # CLI inference
 │   ├── compare_models.py         # Train all BiLSTM variants + comparison plot
-│   ├── export_onnx.py            # ONNX export for BiLSTM
 │   └── download_glove.py         # Download GloVe 6B vectors
 │
 ├── tests/
