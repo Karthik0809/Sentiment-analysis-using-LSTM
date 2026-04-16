@@ -464,11 +464,10 @@ experiment reproducibility.
 
 \subsection{CI/CD and Containerisation}
 Both services are containerised with multi-stage \textbf{Docker} builds
-and orchestrated via Docker Compose, enabling one-command deployment.
+and orchestrated via Docker Compose, enabling one-command local deployment.
 A \textbf{GitHub Actions} workflow automatically runs the full test
-suite on Python 3.10 and 3.11, verifies Docker image builds on every
-pull request, and publishes versioned images to Docker Hub on tagged
-releases.
+suite on Python 3.10 and 3.11 on every push and pull request, ensuring
+regressions in preprocessing and model inference are caught before merge.
 
 The complete source code, trained checkpoints, and deployment
 configuration are available on GitHub.

@@ -4,8 +4,8 @@ Sentiment classification models:
   - BaselineLSTM         (ablation baseline)
   - StackedBiGRU         (GRU variant for comparison)
 
-All models accept an optional `pretrained_embeddings` tensor (from GloVe /
-FastText) to replace random initialisation.  Pass the tensor returned by
+All models accept an optional `pretrained_embeddings` tensor (from GloVe)
+to replace random initialisation.  Pass the tensor returned by
 src.utils.embeddings.load_glove() to enable this.
 """
 import torch
@@ -72,7 +72,7 @@ class BiLSTMWithAttention(nn.Module):
     Parameters
     ----------
     pretrained_embeddings : optional FloatTensor (vocab_size+1, embedding_dim)
-        from src.utils.embeddings.load_glove() or load_fasttext().
+        from src.utils.embeddings.load_glove().
         When supplied, embedding_dim is inferred from the tensor shape.
     """
 
