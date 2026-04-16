@@ -1,6 +1,5 @@
 # ── Core ML ───────────────────────────────────────────────────────────
 torch>=2.2.0
-torchvision>=0.17.0
 
 # ── NLP ───────────────────────────────────────────────────────────────
 nltk>=3.8.1
@@ -30,10 +29,6 @@ gdown>=5.1.0               # Google Drive model download on Streamlit Cloud
 
 # ── Experiment Tracking ───────────────────────────────────────────────
 mlflow>=2.12.0             # Experiment tracking & model registry
-
-# ── ONNX Export & Runtime ─────────────────────────────────────────────
-onnx>=1.16.0               # ONNX graph format
-onnxruntime>=1.18.0        # Fast CPU inference
 
 # ── Config & Utilities ────────────────────────────────────────────────
 pyyaml>=6.0.1
