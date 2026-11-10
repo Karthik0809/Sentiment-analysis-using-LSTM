@@ -3,7 +3,7 @@ torch>=2.13.0
 torchvision>=0.17.0
 
 # ── NLP ───────────────────────────────────────────────────────────────
-nltk>=3.10.3
+nltk>=3.10.4
 transformers>=5.10.0       # DistilBERT / BERT comparison model
 
 # ── Data Processing ───────────────────────────────────────────────────
