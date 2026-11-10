@@ -29,7 +29,7 @@ feedparser>=6.0.11         # RSS feed parsing
 gdown>=5.2.2               # Google Drive model download on Streamlit Cloud
 
 # ── Experiment Tracking ───────────────────────────────────────────────
-mlflow>=2.12.0             # Experiment tracking & model registry
+mlflow>=3.17.2             # Experiment tracking & model registry
 
 # ── ONNX Export & Runtime ─────────────────────────────────────────────
 onnx>=1.16.0               # ONNX graph format
